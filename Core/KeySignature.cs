@@ -6,6 +6,9 @@ namespace Core
 {
     public enum KeySignature
     {
+        AMajor,
+        BFlatMajor,
+        BMajor,
         CMajor,
         DFlatMajor,
         DMajor,
@@ -15,9 +18,6 @@ namespace Core
         GFlatMajor,
         GMajor,
         AFlatMajor,
-        AMajor,
-        BFlatMajor,
-        BMajor,
         AMinor,
         BFlatMinor,
         BMinor,

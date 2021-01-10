@@ -61,45 +61,33 @@ namespace Test
         }
 
         [Fact]
-        public void Parse_Returns_ChordProgression()
+        public void Parse_Returns_SongChart()
         {
             var sut = new SongParser();
 
             var url = "irealbook://Song Title=LastName FirstName=Style=Ab=n=T44*A{C^7 |A-7 |D-9 |G7#5 }";
 
             var song = sut.Parse(url);
-            Assert.Equal("T44", song.ChordProgression.Symbols[0]);
-            Assert.Equal("*A", song.ChordProgression.Symbols[1]);
-            Assert.Equal("{", song.ChordProgression.Symbols[2]);
-            Assert.Equal("C", song.ChordProgression.Symbols[3]);
-            Assert.Equal("^7", song.ChordProgression.Symbols[4]);
-            Assert.Equal(" ", song.ChordProgression.Symbols[5]);
-            Assert.Equal("|", song.ChordProgression.Symbols[6]);
-            Assert.Equal("A", song.ChordProgression.Symbols[7]);
-            Assert.Equal("-7", song.ChordProgression.Symbols[8]);
-            Assert.Equal(" ", song.ChordProgression.Symbols[9]);
-            Assert.Equal("|", song.ChordProgression.Symbols[10]);
-            Assert.Equal("D", song.ChordProgression.Symbols[11]);
-            Assert.Equal("-9", song.ChordProgression.Symbols[12]);
-            Assert.Equal(" ", song.ChordProgression.Symbols[13]);
-            Assert.Equal("|", song.ChordProgression.Symbols[14]);
-            Assert.Equal("G", song.ChordProgression.Symbols[15]);
-            Assert.Equal("7#5", song.ChordProgression.Symbols[16]);
-            Assert.Equal(" ", song.ChordProgression.Symbols[17]);
-            Assert.Equal("}", song.ChordProgression.Symbols[18]);
-            Assert.Equal(19, song.ChordProgression.Symbols.Length);
-        }
-
-        //[Fact]
-        public void Parse_26_2()
-        {
-            var sut = new SongParser();
-
-            var url = "irealbook://26-2=Coltrane John==Medium Up Swing=F==1r34LbKcu7ZL7bD4F^7 ZL7F 7-CZL7C 7A^ZL7E 7^bDZL7bABb^7 4T[A* 7^AZA7LZD^bDZL7bA 7^F[A]* 7C 7-GZL7G 7-7 E7L 7^bGC[B*]-7 F7FZL7C 7^AZL7E ^7bDZL7bA 7^bBZL^7XyQCZL7C7^bD|LZE-7A|QyX7-bE|QyX7b^BZL7F 7^DZL7A b7XyQ7F 7-BZL7F-7 C7L7C 7^AZL7E 7^DbZL7bA 7^F[A*] ZC-7 G|QyXb^7 Ab7LZDb^7 E7LZA^7 C7LZF^7   Z";
-
-            var song = sut.Parse(url);
-            Assert.Equal("T44", song.ChordProgression.Symbols[0]);
-            Assert.Equal("*A", song.ChordProgression.Symbols[1]);
+            Assert.Equal(new Token{ Type = TokenType.TimeSignature, Symbol = "T44" }, song.SongChart.Tokens[0]);
+            Assert.Equal(new Token{ Type = TokenType.RehearsalMark, Symbol = "*A" }, song.SongChart.Tokens[1]);
+            Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "{" }, song.SongChart.Tokens[2]);
+            Assert.Equal(new Token{ Type = TokenType.Chord, Symbol = "C" }, song.SongChart.Tokens[3]);
+            Assert.Equal(new Token{ Type = TokenType.ChordQuality, Symbol = "^7" }, song.SongChart.Tokens[4]);
+            Assert.Equal(new Token{ Type = TokenType.EmptyCell, Symbol = " "}, song.SongChart.Tokens[5]);
+            Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "|"}, song.SongChart.Tokens[6]);
+            Assert.Equal(new Token{ Type = TokenType.Chord, Symbol = "A"}, song.SongChart.Tokens[7]);
+            Assert.Equal(new Token{ Type = TokenType.ChordQuality, Symbol = "-7"}, song.SongChart.Tokens[8]);
+            Assert.Equal(new Token{ Type = TokenType.EmptyCell, Symbol = " "}, song.SongChart.Tokens[9]);
+            Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "|"}, song.SongChart.Tokens[10]);
+            Assert.Equal(new Token{ Type = TokenType.Chord, Symbol = "D"}, song.SongChart.Tokens[11]);
+            Assert.Equal(new Token{ Type = TokenType.ChordQuality, Symbol = "-9"}, song.SongChart.Tokens[12]);
+            Assert.Equal(new Token{ Type = TokenType.EmptyCell, Symbol = " "}, song.SongChart.Tokens[13]);
+            Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "|"}, song.SongChart.Tokens[14]);
+            Assert.Equal(new Token{ Type = TokenType.Chord, Symbol = "G"}, song.SongChart.Tokens[15]);
+            Assert.Equal(new Token{ Type = TokenType.ChordQuality, Symbol = "7#5"}, song.SongChart.Tokens[16]);
+            Assert.Equal(new Token{ Type = TokenType.EmptyCell, Symbol = " "}, song.SongChart.Tokens[17]);
+            Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "}"}, song.SongChart.Tokens[18]);
+            Assert.Equal(19, song.SongChart.Tokens.Length);
         }
     }
 }

@@ -18,6 +18,6 @@ namespace Core
         public string Composer { get; set; }
         public string Style { get; set; }
         public KeySignature KeySignature { get; set; }
-        public ChordProgression ChordProgression { get; set; }
+        public SongChart SongChart { get; set; }
     }
 }

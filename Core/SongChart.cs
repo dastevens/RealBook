@@ -4,8 +4,8 @@ using System.Text;
 
 namespace Core
 {
-    public class ChordProgression
+    public class SongChart
     {
-        public string[] Symbols { get; set; } = new string[0];
+        public Token[] Tokens { get; set; } = new Token[0];
     }
 }
