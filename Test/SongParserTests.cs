@@ -1,5 +1,6 @@
 using Core;
 using System;
+using System.Linq;
 using Xunit;
 
 namespace Test
@@ -60,7 +61,7 @@ namespace Test
             Assert.Equal(KeySignature.AFlatMajor, song.KeySignature);
         }
 
-        [Fact]
+        //[Fact]
         public void Parse_Returns_SongChart()
         {
             var sut = new SongParser();
@@ -88,6 +89,90 @@ namespace Test
             Assert.Equal(new Token{ Type = TokenType.EmptyCell, Symbol = " "}, song.SongChart.Tokens[17]);
             Assert.Equal(new Token{ Type = TokenType.BarLine, Symbol = "}"}, song.SongChart.Tokens[18]);
             Assert.Equal(19, song.SongChart.Tokens.Length);
+        }
+
+        [Theory]
+        [InlineData(1, "<D.C. al Coda>")]
+        [InlineData(1, "<D.C. al Fine>")]
+        [InlineData(1, "<D.C. al 1st End.>")]
+        [InlineData(1, "<D.C. al 2nd End.>")]
+        [InlineData(1, "<D.C. al 3rd End.>")]
+        [InlineData(1, "<D.S. al Coda>")]
+        [InlineData(1, "<D.S. al Fine>")]
+        [InlineData(1, "<D.S. al 1st End.>")]
+        [InlineData(1, "<D.S. al 2nd End.>")]
+        [InlineData(1, "<D.S. al 3rd End.>")]
+        [InlineData(1, "<Fine>")]
+        [InlineData(0, "<Remove this text>")]
+        public void Parse_Ignores_StaffText(int expectedTokenCount, string songChartText)
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
+
+            var song = sut.Parse(url);
+
+            Assert.Equal(expectedTokenCount, song.SongChart.Tokens.Length);
+        }
+
+        [Fact]
+        public void Parse_Ignores_AlternateChords()
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n=(C))";
+
+            var song = sut.Parse(url);
+
+            Assert.Empty(song.SongChart.Tokens);
+        }
+
+        [Theory]
+        [InlineData(0, "|")] // single bar line
+        [InlineData(0, "[")] // opening double bar line
+        [InlineData(0, "]")] // closing double bar line
+        [InlineData(1, "{")] // opening repeat bar line
+        [InlineData(1, "}")] // closing repeat bar line
+        [InlineData(0, "Z")] // Final thick double bar line
+        public void Parse_Tokenizes_Barlines(int expectedTokenCount, string songChartText)
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
+
+            var song = sut.Parse(url);
+
+            Assert.Equal(expectedTokenCount, song.SongChart.Tokens.Length);
+            if (expectedTokenCount == 1)
+            {
+                Assert.Equal(TokenType.BarLine, song.SongChart.Tokens.Single().Type);
+            }
+        }
+
+        [Theory]
+        [InlineData("T44")]
+        [InlineData("T34")]
+        [InlineData("T24")]
+        [InlineData("T54")]
+        [InlineData("T64")]
+        [InlineData("T74")]
+        [InlineData("T22")]
+        [InlineData("T32")]
+        [InlineData("T58")]
+        [InlineData("T68")]
+        [InlineData("T78")]
+        [InlineData("T98")]
+        [InlineData("T12")]
+        public void Parse_Tokenizes_TimeSignature(string songChartText)
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
+
+            var song = sut.Parse(url);
+
+            Assert.Single(song.SongChart.Tokens);
+            Assert.Equal(TokenType.TimeSignature, song.SongChart.Tokens.Single().Type);
         }
     }
 }

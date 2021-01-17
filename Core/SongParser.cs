@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Core
 {
@@ -82,6 +83,10 @@ namespace Core
 
         private SongChart ToSongChart(string component)
         {
+            component = RemoveUnwantedStaffText(component);
+            component = RemoveAlternateChords(component);
+            component = ReplaceBarLines(component);
+
             var tokens = ToTokens(component).ToArray();
             return new SongChart
             {
@@ -89,39 +94,74 @@ namespace Core
             };
         }
 
+        private string ReplaceBarLines(string component)
+        {
+            return component
+                .Replace("|", " ")
+                .Replace("[", " ")
+                .Replace("]", " ")
+                .Replace("{", " { ")
+                .Replace("}", " } ")
+                .Replace("Z", " ");
+        }
+
+        private string RemoveAlternateChords(string component)
+        {
+            var alternateChordPattern = "\\(.*\\)";
+            var alternateChordTextEvaluator = new MatchEvaluator(match => string.Empty);
+            return Regex.Replace(component, alternateChordPattern, alternateChordTextEvaluator);
+        }
+
+        private string RemoveUnwantedStaffText(string component)
+        {
+            var pattern = "<.*>";
+            var evaluator = new MatchEvaluator(RemoveUnwantedStaffText);
+            return Regex.Replace(component, pattern, evaluator);
+        }
+
+        private string RemoveUnwantedStaffText(Match match)
+        {
+            switch (match.Value)
+            {
+                case "<D.C. al Coda>":
+                case "<D.C. al Fine>":
+                case "<D.C. al 1st End.>":
+                case "<D.C. al 2nd End.>":
+                case "<D.C. al 3rd End.>":
+                case "<D.S. al Coda>":
+                case "<D.S. al Fine>":
+                case "<D.S. al 1st End.>":
+                case "<D.S. al 2nd End.>":
+                case "<D.S. al 3rd End.>":
+                case "<Fine>":
+                    return match.Value.Replace(' ', '_');
+                default:
+                    return string.Empty;
+            }            
+        }
+
         private IEnumerable<Token> ToTokens(string component)
         {
-            if (component.Length == 0)
-            {
-                return new Token[0];
-            }
+            return component
+                .Split(" ".ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                .Select(symbol => ToToken(symbol))
+                .Where(token => token.Type != TokenType.Unknown);
+        }
 
-            var matchingTokenizers = Tokenizers
-                .Where(tokenizer => component.StartsWith(tokenizer.Key));
-            
-            if (!matchingTokenizers.Any())
+        private Token ToToken(string symbol)
+        {
+            if (Tokenizers.TryGetValue(symbol, out var tokenizer))
             {
-                return ToTokens(component.Substring(1))
-                    .Prepend(new Token { Type = TokenType.Unknown, Symbol = component.Substring(0, 1) });
+                return tokenizer(symbol);
             }
-            else
-            {
-                var longestMatchingTokenizer = matchingTokenizers
-                    .OrderByDescending(tokenizer => tokenizer.Key.Length)
-                    .First();
-
-                var thisComponent = component.Substring(0, longestMatchingTokenizer.Key.Length);
-                var nextComponent = component.Substring(longestMatchingTokenizer.Key.Length);
-                return ToTokens(nextComponent)
-                    .Prepend(longestMatchingTokenizer.Value(thisComponent));
-            }
+            return new Token { Symbol = symbol, Type = TokenType.Unknown };
         }
 
         private static Token BarLine(string symbol) => new Token { Type = TokenType.BarLine, Symbol = symbol };
         private static Token TimeSignature(string symbol) => new Token { Type = TokenType.TimeSignature, Symbol = symbol };
         private static Token RehearsalMark(string symbol) => new Token { Type = TokenType.RehearsalMark, Symbol = symbol };
         private static Token Ending(string symbol) => new Token { Type = TokenType.Ending, Symbol = symbol };
-        private static Token StaffText(string symbol) => new Token { Type = TokenType.StaffText, Symbol = symbol };
+        private static Token StaffText(string symbol) => new Token { Type = TokenType.StaffText, Symbol = symbol.Replace('_', ' ') };
         private static Token Repeat(string symbol) => new Token { Type = TokenType.Repeat, Symbol = symbol };
         private static Token VerticalSpace(string symbol) => new Token { Type = TokenType.VerticalSpace, Symbol = symbol };
         private static Token Chord(string symbol) => new Token { Type = TokenType.Chord, Symbol = symbol };
@@ -181,22 +221,17 @@ namespace Core
             // You can move the text upwards relative to the current chord by adding a * followed by two digit number between 00 (below the system) and 74 (above the system):
             // <*36Some raised staff text>
             // There are a number of specific staff text phrases that are recognized by the player in iReal Pro:
-            { "<D.C. al Coda>", StaffText },
-            { "<D.C. al Fine>", StaffText },
-            { "<D.C. al 1st End.>", StaffText },
-            { "<D.C. al 2nd End.>", StaffText },
-            { "<D.C. al 3rd End.>", StaffText },
-            { "<D.S. al Coda>", StaffText },
-            { "<D.S. al Fine>", StaffText },
-            { "<D.S. al 1st End.>", StaffText },
-            { "<D.S. al 2nd End.>", StaffText },
-            { "<D.S. al 3rd End.>", StaffText },
+            { "<D.C._al_Coda>", StaffText },
+            { "<D.C._al_Fine>", StaffText },
+            { "<D.C._al_1st_End.>", StaffText },
+            { "<D.C._al_2nd_End.>", StaffText },
+            { "<D.C._al_3rd_End.>", StaffText },
+            { "<D.S._al_Coda>", StaffText },
+            { "<D.S._al_Fine>", StaffText },
+            { "<D.S._al_1st_End.>", StaffText },
+            { "<D.S._al_2nd_End.>", StaffText },
+            { "<D.S._al_3rd_End.>", StaffText },
             { "<Fine>", StaffText },
-
-            // TODO: Optimistically just ignore anything else,
-            // hopefully no collisions with other symbols
-            { "<", StaffText },
-            { ">", StaffText },
 
             // If you have a section of the song that is enclosed in repeat bar lines { } you can add in the staff text a number followed by ‘x’ to indicate that the section should repeat that number of times instead of the default 2 times:
             // "<8x>",
