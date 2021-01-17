@@ -2,11 +2,19 @@ using Core;
 using System;
 using System.Linq;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Test
 {
     public class SongParserTests
     {
+        private ITestOutputHelper logger;
+
+        public SongParserTests(ITestOutputHelper logger)
+        {
+            this.logger = logger;
+        }
+
         [Fact]
         public void Parse_Throws_WhenSchemeIsInvalid()
         {
@@ -115,64 +123,176 @@ namespace Test
             Assert.Equal(expectedTokenCount, song.SongChart.Tokens.Length);
         }
 
-        [Fact]
-        public void Parse_Ignores_AlternateChords()
+        [Theory]
+        [InlineData(TokenType.BarLine, "{")]
+        [InlineData(TokenType.BarLine, "}")]
+        [InlineData(TokenType.TimeSignature, "T44")]
+        [InlineData(TokenType.TimeSignature, "T34")]
+        [InlineData(TokenType.TimeSignature, "T24")]
+        [InlineData(TokenType.TimeSignature, "T54")]
+        [InlineData(TokenType.TimeSignature, "T64")]
+        [InlineData(TokenType.TimeSignature, "T74")]
+        [InlineData(TokenType.TimeSignature, "T22")]
+        [InlineData(TokenType.TimeSignature, "T32")]
+        [InlineData(TokenType.TimeSignature, "T58")]
+        [InlineData(TokenType.TimeSignature, "T68")]
+        [InlineData(TokenType.TimeSignature, "T78")]
+        [InlineData(TokenType.TimeSignature, "T98")]
+        [InlineData(TokenType.TimeSignature, "T12")]
+        [InlineData(TokenType.RehearsalMark, "S")]
+        [InlineData(TokenType.RehearsalMark, "Q")]
+        [InlineData(TokenType.Ending, "N1")]
+        [InlineData(TokenType.Ending, "N2")]
+        [InlineData(TokenType.Ending, "N3")]
+        [InlineData(TokenType.Ending, "N0")]
+        [InlineData(TokenType.StaffText, "<D.C. al Coda>")]
+        [InlineData(TokenType.StaffText, "<D.C. al Fine>")]
+        [InlineData(TokenType.StaffText, "<D.C. al 1st End.>")]
+        [InlineData(TokenType.StaffText, "<D.C. al 2nd End.>")]
+        [InlineData(TokenType.StaffText, "<D.C. al 3rd End.>")]
+        [InlineData(TokenType.StaffText, "<D.S. al Coda>")]
+        [InlineData(TokenType.StaffText, "<D.S. al Fine>")]
+        [InlineData(TokenType.StaffText, "<D.S. al 1st End.>")]
+        [InlineData(TokenType.StaffText, "<D.S. al 2nd End.>")]
+        [InlineData(TokenType.StaffText, "<D.S. al 3rd End.>")]
+        [InlineData(TokenType.StaffText, "<Fine>")]
+        [InlineData(TokenType.Repeat, "<1x>")]
+        [InlineData(TokenType.Repeat, "<2x>")]
+        [InlineData(TokenType.Repeat, "<3x>")]
+        [InlineData(TokenType.Repeat, "<4x>")]
+        [InlineData(TokenType.Repeat, "<5x>")]
+        [InlineData(TokenType.Repeat, "<6x>")]
+        [InlineData(TokenType.Repeat, "<7x>")]
+        [InlineData(TokenType.Repeat, "<8x>")]
+        [InlineData(TokenType.RepeatSymbol, "x")]
+        [InlineData(TokenType.RepeatSymbol, "r")]
+        [InlineData(TokenType.Chord, "C")] 
+        [InlineData(TokenType.Chord, "C#")]
+        [InlineData(TokenType.Chord, "Db")]
+        [InlineData(TokenType.Chord, "D")]
+        [InlineData(TokenType.Chord, "D#")]
+        [InlineData(TokenType.Chord, "Eb")]
+        [InlineData(TokenType.Chord, "E")]
+        [InlineData(TokenType.Chord, "F")]
+        [InlineData(TokenType.Chord, "F#")]
+        [InlineData(TokenType.Chord, "Gb")]
+        [InlineData(TokenType.Chord, "G")]
+        [InlineData(TokenType.Chord, "G#")]
+        [InlineData(TokenType.Chord, "Ab")]
+        [InlineData(TokenType.Chord, "A")]
+        [InlineData(TokenType.Chord, "A#")]
+        [InlineData(TokenType.Chord, "Bb")]
+        [InlineData(TokenType.Chord, "B")]
+        [InlineData(TokenType.Chord, "C5")]
+        [InlineData(TokenType.Chord, "C2")]
+        [InlineData(TokenType.Chord, "Cadd9")]
+        [InlineData(TokenType.Chord, "C+")]
+        [InlineData(TokenType.Chord, "Co")]
+        [InlineData(TokenType.Chord, "Ch")]
+        [InlineData(TokenType.Chord, "Csus")]
+        [InlineData(TokenType.Chord, "C^")]
+        [InlineData(TokenType.Chord, "C-")]
+        [InlineData(TokenType.Chord, "C^7")]
+        [InlineData(TokenType.Chord, "C-7")]
+        [InlineData(TokenType.Chord, "C7")]
+        [InlineData(TokenType.Chord, "C7sus")]
+        [InlineData(TokenType.Chord, "Ch7")]
+        [InlineData(TokenType.Chord, "Co7")]
+        [InlineData(TokenType.Chord, "C^9")]
+        [InlineData(TokenType.Chord, "C^13")]
+        [InlineData(TokenType.Chord, "C6")]
+        [InlineData(TokenType.Chord, "C69")]
+        [InlineData(TokenType.Chord, "C^7#11")]
+        [InlineData(TokenType.Chord, "C^9#11")]
+        [InlineData(TokenType.Chord, "C^7#5")]
+        [InlineData(TokenType.Chord, "C-6")]
+        [InlineData(TokenType.Chord, "C-69")]
+        [InlineData(TokenType.Chord, "C-^7")]
+        [InlineData(TokenType.Chord, "C-^9")]
+        [InlineData(TokenType.Chord, "C-9")]
+        [InlineData(TokenType.Chord, "C-11")]
+        [InlineData(TokenType.Chord, "C-7b5")]
+        [InlineData(TokenType.Chord, "Ch9")]
+        [InlineData(TokenType.Chord, "C-b6")]
+        [InlineData(TokenType.Chord, "C-#5")]
+        [InlineData(TokenType.Chord, "C9")]
+        [InlineData(TokenType.Chord, "C7b9")]
+        [InlineData(TokenType.Chord, "C7#9")]
+        [InlineData(TokenType.Chord, "C7#11")]
+        [InlineData(TokenType.Chord, "C7b5")]
+        [InlineData(TokenType.Chord, "C7#5")]
+        [InlineData(TokenType.Chord, "C9#11")]
+        [InlineData(TokenType.Chord, "C9b5")]
+        [InlineData(TokenType.Chord, "C9#5")]
+        [InlineData(TokenType.Chord, "C7b13")]
+        [InlineData(TokenType.Chord, "C7#9#5")]
+        [InlineData(TokenType.Chord, "C7#9b5")]
+        [InlineData(TokenType.Chord, "C7#9#11")]
+        [InlineData(TokenType.Chord, "C7b9#11")]
+        [InlineData(TokenType.Chord, "C7b9b5")]
+        [InlineData(TokenType.Chord, "C7b9#5")]
+        [InlineData(TokenType.Chord, "C7b9#9")]
+        [InlineData(TokenType.Chord, "C7b9b13")]
+        [InlineData(TokenType.Chord, "C7alt")]
+        [InlineData(TokenType.Chord, "C13")]
+        [InlineData(TokenType.Chord, "C13#11")]
+        [InlineData(TokenType.Chord, "C13b9")]
+        [InlineData(TokenType.Chord, "C13#9")]
+        [InlineData(TokenType.Chord, "C7b9sus")]
+        [InlineData(TokenType.Chord, "C7susadd3")]
+        [InlineData(TokenType.Chord, "C9sus")]
+        [InlineData(TokenType.Chord, "C13sus")]
+        [InlineData(TokenType.Chord, "C7b13sus")]
+        [InlineData(TokenType.Chord, "C11")]
+        [InlineData(TokenType.Chord, "C/E")]
+        [InlineData(TokenType.Chord, "C-7/Bb")]
+        [InlineData(TokenType.NoChord, "n")]
+        public void Parse_Tokenizes_Symbol(TokenType expectedTokenType, string songChartText)
         {
             var sut = new SongParser();
 
-            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n=(C))";
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
+
+            var song = sut.Parse(url);
+
+            logger.WriteLine($"{song.SongChart.Tokens.Length}");
+            song.SongChart.Tokens.ToList().ForEach(token => logger.WriteLine($"{token.Type}{token.Symbol}"));
+
+            Assert.Single(song.SongChart.Tokens);
+            Assert.Equal(expectedTokenType, song.SongChart.Tokens.Single().Type);
+            Assert.Equal(songChartText, song.SongChart.Tokens.Single().Symbol);
+        }
+
+        [Theory]
+        [InlineData("|")]
+        [InlineData("[")]
+        [InlineData("]")]
+        [InlineData("Z")]
+        [InlineData("*A")]
+        [InlineData("*B")]
+        [InlineData("*C")]
+        [InlineData("*D")]
+        [InlineData("*V")]
+        [InlineData("*i")]
+        [InlineData("f")]
+        [InlineData("<Remove this text>")]
+        [InlineData("Y")]
+        [InlineData("YY")]
+        [InlineData("YYY")]
+        [InlineData("p")]
+        [InlineData("s")]
+        [InlineData("l")]
+        [InlineData(",")]
+        [InlineData("(C)")]
+        public void Parse_Ignores_Symbol(string songChartText)
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
 
             var song = sut.Parse(url);
 
             Assert.Empty(song.SongChart.Tokens);
-        }
-
-        [Theory]
-        [InlineData(0, "|")] // single bar line
-        [InlineData(0, "[")] // opening double bar line
-        [InlineData(0, "]")] // closing double bar line
-        [InlineData(1, "{")] // opening repeat bar line
-        [InlineData(1, "}")] // closing repeat bar line
-        [InlineData(0, "Z")] // Final thick double bar line
-        public void Parse_Tokenizes_Barlines(int expectedTokenCount, string songChartText)
-        {
-            var sut = new SongParser();
-
-            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
-
-            var song = sut.Parse(url);
-
-            Assert.Equal(expectedTokenCount, song.SongChart.Tokens.Length);
-            if (expectedTokenCount == 1)
-            {
-                Assert.Equal(TokenType.BarLine, song.SongChart.Tokens.Single().Type);
-            }
-        }
-
-        [Theory]
-        [InlineData("T44")]
-        [InlineData("T34")]
-        [InlineData("T24")]
-        [InlineData("T54")]
-        [InlineData("T64")]
-        [InlineData("T74")]
-        [InlineData("T22")]
-        [InlineData("T32")]
-        [InlineData("T58")]
-        [InlineData("T68")]
-        [InlineData("T78")]
-        [InlineData("T98")]
-        [InlineData("T12")]
-        public void Parse_Tokenizes_TimeSignature(string songChartText)
-        {
-            var sut = new SongParser();
-
-            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
-
-            var song = sut.Parse(url);
-
-            Assert.Single(song.SongChart.Tokens);
-            Assert.Equal(TokenType.TimeSignature, song.SongChart.Tokens.Single().Type);
         }
     }
 }
