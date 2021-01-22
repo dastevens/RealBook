@@ -8,15 +8,9 @@
         Ending,
         StaffText,
         Repeat,
-        VerticalSpace,
         Chord,
-        ChordQuality,
-        AlternateChord,
         NoChord,
         RepeatSymbol,
-        ChordSize,
-        Divider,
-        EmptyCell,
         Unknown,
     }
 }

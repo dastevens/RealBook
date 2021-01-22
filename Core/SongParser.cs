@@ -137,6 +137,21 @@ namespace Core
             { "S", " S " },
             { "Q", " Q " },
 
+            // TimeSignature
+            { "T44", "T44 " }, // 4/4
+            { "T34", "T34 " }, // 3/4
+            { "T24", "T24 " }, // 2/4
+            { "T54", "T54 " },  // 5/4
+            { "T64", "T64 " }, // 6/4
+            { "T74", "T74 " }, // 7/4
+            { "T22", "T22 " }, // 2/2
+            { "T32", "T32 " }, // 3/2
+            { "T58", "T58 " }, // 5/8
+            { "T68", "T68 " }, // 6/8
+            { "T78", "T78 " }, // 7/8
+            { "T98", "T98 " }, // 9/8
+            { "T12", "T12 " }, // 12/8
+
             // Ending
             { "N1", " N1 " },
             { "N2", " N2 " },
@@ -255,15 +270,9 @@ namespace Core
         private static Token Ending(string symbol) => new Token { Type = TokenType.Ending, Symbol = symbol };
         private static Token StaffText(string symbol) => new Token { Type = TokenType.StaffText, Symbol = symbol };
         private static Token Repeat(string symbol) => new Token { Type = TokenType.Repeat, Symbol = symbol };
-        private static Token VerticalSpace(string symbol) => new Token { Type = TokenType.VerticalSpace, Symbol = symbol };
         private static Token Chord(string symbol) => new Token { Type = TokenType.Chord, Symbol = symbol };
-        private static Token ChordQuality(string symbol) => new Token { Type = TokenType.ChordQuality, Symbol = symbol };
-        private static Token AlternateChord(string symbol) => new Token { Type = TokenType.AlternateChord, Symbol = symbol };
         private static Token NoChord(string symbol) => new Token { Type = TokenType.NoChord, Symbol = symbol };
         private static Token RepeatSymbol(string symbol) => new Token { Type = TokenType.RepeatSymbol, Symbol = symbol };
-        private static Token ChordSize(string symbol) => new Token { Type = TokenType.ChordSize, Symbol = symbol };
-        private static Token Divider(string symbol) => new Token { Type = TokenType.Divider, Symbol = symbol };
-        private static Token EmptyCell(string symbol) => new Token { Type = TokenType.EmptyCell, Symbol = symbol };
 
         private static string[] Chords = new[]
         {
