@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using Core;
 
 namespace Console
@@ -12,9 +10,13 @@ namespace Console
         static void Main(string[] args)
         {
             var songs = ReadCatalog(Path.Combine("..", "Data"))
+                .Where(song => args.Length > 0 ? args.Any(arg => song.Style.Contains(arg)) : true)
                 .ToArray();
 
             //System.Console.WriteLine($"{songs.Length} songs in catalog");
+            var styleIds = CategoryIds(songs.Select(song => song.Style));
+            var keySignatureIds = CategoryIds(songs.Select(song => song.KeySignature));
+            var timeSignatureIds = CategoryIds(songs.Select(song => song.SongChart.Tokens.FirstOrDefault(token => token.Type == TokenType.TimeSignature)?.Symbol ?? string.Empty));
             var chordDegrees = Enumerable.Range(0, 12);
             var chordQualities = Count(songs.SelectMany(song => song.GetChords().Select(chord => chord.Quality).ToArray()))
                 .OrderByDescending(count => count.Value)
@@ -23,9 +25,16 @@ namespace Console
 
             var headers = new object[]
             {
-                "Title", "Composer", "Style", "KeySignature", "TimeSignature"
+                "Title",
+                "Composer",
+                "Style",
+                "StyleId",
+                "KeySignature",
+                "KeySignatureId",
+                "TimeSignature",
+                "TimeSignatureId",
             }
-                .Concat(chordDegrees.Cast<object>())
+                .Concat(chordDegrees.Select(chordDegree => $"[{chordDegree}]").Cast<object>())
                 .Concat(chordQualities.Cast<object>())
                 .ToArray();
             
@@ -37,14 +46,17 @@ namespace Console
                     var chords = song.GetChords();
                     var chordDegreeCounts = Count(chords.Select(chord => chord.Degree(song.KeySignature)));
                     var chordQualityCounts = Count(chords.Select(chord => chord.Quality));
-
+                    var timeSignature = song.SongChart.Tokens.FirstOrDefault(token => token.Type == TokenType.TimeSignature)?.Symbol ?? string.Empty;
                     var fields = new object[]
                     {
                         song.SongTitle,
                         song.Composer,
                         song.Style,
+                        styleIds[song.Style],
                         song.KeySignature,
-                        song.SongChart.Tokens.FirstOrDefault(token => token.Type == TokenType.TimeSignature)?.Symbol,
+                        keySignatureIds[song.KeySignature],
+                        timeSignature,
+                        timeSignatureIds[timeSignature],
                     }
                         .Concat(chordDegrees.Select(chordDegree => chordDegreeCounts.ContainsKey(chordDegree) ? chordDegreeCounts[chordDegree] : 0).Cast<object>())
                         .Concat(chordQualities.Select(chordQuality => chordQualityCounts.ContainsKey(chordQuality) ? chordQualityCounts[chordQuality] : 0).Cast<object>())
@@ -52,50 +64,6 @@ namespace Console
 
                     PrintCsvLine(fields.ToArray());
                 });
-
-            return;
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Key signature counts");
-            Count(songs.Select(song => song.KeySignature))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Time signature counts");
-            Count(songs.SelectMany(song => song.SongChart.Tokens.Where(token => token.Type == TokenType.TimeSignature).Select(token => token.Symbol).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Chord counts");
-            Count(songs.SelectMany(song => song.SongChart.Tokens.Where(token => token.Type == TokenType.Chord).Select(token => token.Symbol).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Chord roots");
-            Count(songs.SelectMany(song => song.SongChart.Tokens.Where(token => token.Type == TokenType.Chord).Select(token => Chord.FromSymbol(token.Symbol).Root).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Chord quality counts");
-            Count(songs.SelectMany(song => song.SongChart.Tokens.Where(token => token.Type == TokenType.Chord).Select(token => Chord.FromSymbol(token.Symbol).Quality).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
-
-            System.Console.WriteLine();
-            System.Console.WriteLine($"Chord degree counts");
-            Count(songs.SelectMany(song => song.SongChart.Tokens.Where(token => token.Type == TokenType.Chord).Select(token => Chord.FromSymbol(token.Symbol).Degree(song.KeySignature)).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .ToList()
-                .ForEach(count => System.Console.WriteLine($"{count.Key}: {count.Value}"));
         }
 
         static Song[] ReadCatalog(string folder)        
@@ -129,6 +97,14 @@ namespace Console
                         }
                         return counts;
                     });
+        }
+
+        static Dictionary<CategoryType, int> CategoryIds<CategoryType>(IEnumerable<CategoryType> categories)
+        {
+            return categories
+                .Distinct()
+                .Select((category, index) => new { Category = category, Index = index})
+                .ToDictionary(categoryIndex => categoryIndex.Category, styleIndex => styleIndex.Index);
         }
 
         static Chord[] GetChords(this Song song)

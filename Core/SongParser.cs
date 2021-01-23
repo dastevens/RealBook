@@ -83,6 +83,7 @@ namespace Core
 
         private SongChart ToSongChart(string component)
         {
+            var input = component;
             component = RemoveUnwantedStaffText(component);
             component = RemoveAlternateChords(component);
             component = MoveChordsOutTheWay(component);
@@ -92,6 +93,8 @@ namespace Core
             var tokens = ToTokens(component).ToArray();
             return new SongChart
             {
+                Decoded = input,
+                Preprocessed = component,
                 Tokens = tokens,
             };
         }
@@ -124,7 +127,11 @@ namespace Core
             "l",
 
             // Divider
-            ","
+            ",",
+
+            // Undocumented: not sure what these are
+            "Xy",
+            "L",
         };
 
         readonly static Dictionary<string, string> Substitutions = new Dictionary<string, string>
@@ -185,7 +192,7 @@ namespace Core
 
         private string RemoveUnwantedStaffText(string component)
         {
-            var pattern = "<.*>";
+            var pattern = "<[^>]*>";
             var evaluator = new MatchEvaluator(RemoveUnwantedStaffText);
             return Regex.Replace(component, pattern, evaluator);
         }
