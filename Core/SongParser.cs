@@ -101,12 +101,6 @@ namespace Core
 
         readonly static string[] SymbolsToRemove = new[]
         {
-            // BarLine
-            "|",
-            "[",
-            "]",
-            "Z",
-
             // RehearsalMark
             "*A",
             "*B",
@@ -130,56 +124,60 @@ namespace Core
             ",",
 
             // Undocumented: not sure what these are
-            "Xy",
-            "L",
+            "XyQ",
+            "KcL",
         };
 
-        readonly static Dictionary<string, string> Substitutions = new Dictionary<string, string>
+        readonly static string[] SymbolsToSplit = new[]
         {
             // BarLine
-            { "{", " { " },
-            { "}", " } " },
+            "|",
+            "[",
+            "]",
+            "{",
+            "}",
+            "Z",
 
             // RehearsalMark
-            { "S", " S " },
-            { "Q", " Q " },
+            "S",
+            "Q",
 
             // TimeSignature
-            { "T44", "T44 " }, // 4/4
-            { "T34", "T34 " }, // 3/4
-            { "T24", "T24 " }, // 2/4
-            { "T54", "T54 " },  // 5/4
-            { "T64", "T64 " }, // 6/4
-            { "T74", "T74 " }, // 7/4
-            { "T22", "T22 " }, // 2/2
-            { "T32", "T32 " }, // 3/2
-            { "T58", "T58 " }, // 5/8
-            { "T68", "T68 " }, // 6/8
-            { "T78", "T78 " }, // 7/8
-            { "T98", "T98 " }, // 9/8
-            { "T12", "T12 " }, // 12/8
+            "T44", // 4/4
+            "T34", // 3/4
+            "T24", // 2/4
+            "T54",  // 5/4
+            "T64", // 6/4
+            "T74", // 7/4
+            "T22", // 2/2
+            "T32", // 3/2
+            "T58", // 5/8
+            "T68", // 6/8
+            "T78", // 7/8
+            "T98", // 9/8
+            "T12", // 12/8
 
             // Ending
-            { "N1", " N1 " },
-            { "N2", " N2 " },
-            { "N3", " N3 " },
-            { "N0", " N0 " },
+            "N1",
+            "N2",
+            "N3",
+            "N0",
 
             // RepeatSymbol
-            { "x", " x " },
-            { "r", " r " },
+            "x",
+            "r",
         };
 
         private string MakeSplittable(string input)
         {
-            var stage1 = Substitutions
+            var stage1 = SymbolsToRemove
                 .Aggregate(
                     seed: input,
-                    func: (current, substitution) => current.Replace(substitution.Key, substitution.Value));
-            var stage2 = SymbolsToRemove
+                    func: (current, symbolToRemove) => current.Replace(symbolToRemove, " "));
+            var stage2 = SymbolsToSplit
                 .Aggregate(
                     seed: stage1,
-                    func: (current, symbolToRemove) => current.Replace(symbolToRemove, " "));
+                    func: (current, symbolToSplit) => current.Replace(symbolToSplit, $" {symbolToSplit} "));
             return stage2;
         }
 

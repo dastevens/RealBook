@@ -12,15 +12,17 @@ namespace Core
             var decoder = new Decoder();
             var songParser = new SongParser();
 
-            foreach (var input in songBookUrl.Split(new[] { "1r34LbKcu7" }, StringSplitOptions.RemoveEmptyEntries).Skip(1))
+            // Songs are separated by "==="
+            // foreach (var input in songBookUrl.Split(new[] { "1r34LbKcu7" }, StringSplitOptions.RemoveEmptyEntries).Skip(0))
+            foreach (var input in songBookUrl.Split(new[] { "irealb://", "===" }, StringSplitOptions.RemoveEmptyEntries))
             {
-                var components = Uri.UnescapeDataString(input).Split('=');
-                var unescaped = components[0];
-                var decoded = decoder.Decode(unescaped);
+                var components = Uri.UnescapeDataString(input).Split(new[] { "=", "1r34LbKcu7" }, StringSplitOptions.RemoveEmptyEntries);
 
-                if (components.Length > 10)
+                if (components.Length > 4)
                 {
-                    var songUrl = $"irealbook://{components[6]}={components[7]}={components[9]}={components[10]}=n={decoded}";
+                    var unescaped = components[4];
+                    var decoded = decoder.Decode(unescaped);
+                    var songUrl = $"irealbook://{components[0]}={components[1]}={components[2]}={components[3]}=n={decoded}";
                     try
                     {
                         var song = songParser.Parse(songUrl);

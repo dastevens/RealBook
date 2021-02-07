@@ -13,6 +13,9 @@ namespace Console
                 .Where(song => args.Length > 0 ? args.Any(arg => song.Style.Contains(arg)) : true)
                 .ToArray();
 
+            songs = songs.Where(song => song.SongChart.Tokens.All(token => new[] { TokenType.TimeSignature, TokenType.Chord, TokenType.BarLine }.Contains(token.Type)))
+                .ToArray();
+
             //System.Console.WriteLine($"{songs.Length} songs in catalog");
             var styleIds = CategoryIds(songs.Select(song => song.Style));
             var keySignatureIds = CategoryIds(songs.Select(song => song.KeySignature));

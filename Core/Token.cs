@@ -9,6 +9,11 @@ namespace Core
         public string Symbol { get; set; } = string.Empty;
         public TokenType Type { get; set; }
 
+        public override string ToString()
+        {
+            return $"{Type}[{Symbol}]";
+        }
+
         public override int GetHashCode()
         {
             return Symbol.GetHashCode() & Type.GetHashCode();
