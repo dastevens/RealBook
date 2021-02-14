@@ -112,6 +112,23 @@ namespace Test
         }
 
         [Theory]
+        [InlineData(0, "(C)")]
+        [InlineData(1, "C(F#)")]
+        [InlineData(2, "C(F#)F")]
+        [InlineData(2, "C(F#)F(B)")]
+        [InlineData(3, "C(F#)F(B)C")]
+        public void Parse_Ignores_AlternateChords(int expectedTokenCount, string songChartText)
+        {
+            var sut = new SongParser();
+
+            var url = $"irealbook://Song Title=LastName FirstName=Style=Ab=n={songChartText}";
+
+            var song = sut.Parse(url);
+
+            Assert.Equal(expectedTokenCount, song.SongChart.Tokens.Length);
+        }
+
+        [Theory]
         [InlineData(TokenType.BarLine, "{")]
         [InlineData(TokenType.BarLine, "}")]
         [InlineData(TokenType.TimeSignature, "T44")]

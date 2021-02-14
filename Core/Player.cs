@@ -99,6 +99,7 @@ namespace Core
                             RemoveCurrent();
                         }
                         break;
+                    case TokenType.TimeSignature:
                     case TokenType.Unknown:
                         break;
                     default:

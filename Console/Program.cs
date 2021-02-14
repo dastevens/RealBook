@@ -16,29 +16,15 @@ namespace Console
             songs = songs.Where(song => song.SongChart.Tokens.All(token => new[] { TokenType.TimeSignature, TokenType.Chord, TokenType.BarLine }.Contains(token.Type)))
                 .ToArray();
 
-            //System.Console.WriteLine($"{songs.Length} songs in catalog");
-            var styleIds = CategoryIds(songs.Select(song => song.Style));
-            var keySignatureIds = CategoryIds(songs.Select(song => song.KeySignature));
-            var timeSignatureIds = CategoryIds(songs.Select(song => song.SongChart.Tokens.FirstOrDefault(token => token.Type == TokenType.TimeSignature)?.Symbol ?? string.Empty));
-            var chordDegrees = Enumerable.Range(0, 12);
-            var chordQualities = Count(songs.SelectMany(song => song.GetChords().Select(chord => chord.Quality).ToArray()))
-                .OrderByDescending(count => count.Value)
-                .Select(count => count.Key)
-                .ToArray();
-
             var headers = new object[]
             {
                 "Title",
                 "Composer",
                 "Style",
-                "StyleId",
                 "KeySignature",
-                "KeySignatureId",
                 "TimeSignature",
-                "TimeSignatureId",
             }
-                .Concat(chordDegrees.Select(chordDegree => $"[{chordDegree}]").Cast<object>())
-                .Concat(chordQualities.Cast<object>())
+                .Append("Chords")
                 .ToArray();
             
             PrintCsvLine(headers);
@@ -47,23 +33,16 @@ namespace Console
                 .ForEach(song =>
                 {
                     var chords = song.GetChords();
-                    var chordDegreeCounts = Count(chords.Select(chord => chord.Degree(song.KeySignature)));
-                    var chordQualityCounts = Count(chords.Select(chord => chord.Quality));
                     var timeSignature = song.SongChart.Tokens.FirstOrDefault(token => token.Type == TokenType.TimeSignature)?.Symbol ?? string.Empty;
                     var fields = new object[]
                     {
                         song.SongTitle,
                         song.Composer,
                         song.Style,
-                        styleIds[song.Style],
                         song.KeySignature,
-                        keySignatureIds[song.KeySignature],
                         timeSignature,
-                        timeSignatureIds[timeSignature],
                     }
-                        .Concat(chordDegrees.Select(chordDegree => chordDegreeCounts.ContainsKey(chordDegree) ? chordDegreeCounts[chordDegree] : 0).Cast<object>())
-                        .Concat(chordQualities.Select(chordQuality => chordQualityCounts.ContainsKey(chordQuality) ? chordQualityCounts[chordQuality] : 0).Cast<object>())
-                        ;
+                        .Concat(Player.Play(song).Select(chord => $"[{chord.Degree(song.KeySignature)}]{chord.Quality}").ToArray());
 
                     PrintCsvLine(fields.ToArray());
                 });

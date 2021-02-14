@@ -126,6 +126,7 @@ namespace Core
             // Undocumented: not sure what these are
             "XyQ",
             "KcL",
+            "L",
         };
 
         readonly static string[] SymbolsToSplit = new[]
@@ -183,7 +184,7 @@ namespace Core
 
         private string RemoveAlternateChords(string component)
         {
-            var alternateChordPattern = "\\(.*\\)";
+            var alternateChordPattern = "\\([^\\)]*\\)";
             var alternateChordTextEvaluator = new MatchEvaluator(match => " ");
             return Regex.Replace(component, alternateChordPattern, alternateChordTextEvaluator);
         }
